@@ -77,7 +77,7 @@ class DictionaryImporterTest extends KernelTestBase {
     \Drupal\field\Entity\FieldStorageConfig::create([
       'field_name' => 'field_definitions',
       'entity_type' => 'node',
-      'type' => 'string_long',
+      'type' => 'text_long',
     ])->save();
 
     \Drupal\field\Entity\FieldConfig::create([
