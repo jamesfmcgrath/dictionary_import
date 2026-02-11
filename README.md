@@ -4,10 +4,12 @@ Drop-in Drupal module for importing dictionary definitions via Drush command. Im
 
 ## Requirements
 
-- Drupal 10.x
-- PHP 8.1+
+- Drupal 10.x or 11.x
+- PHP 8.1+ (8.2+ recommended for Drupal 11)
 - Drush 12+
 - Node and JSON:API core modules (declared as dependencies)
+
+**Compatibility:** This module uses standard Drupal APIs (Entity API, services, Drush) and is compatible with both Drupal 10 and Drupal 11. The `core_version_requirement` in `dictionary_import.info.yml` is set to `^10 || ^11`.
 
 The `Dictionary Entry` content type with `field_word` and `field_definitions` fields is created automatically when the module is installed (via `hook_install`) or when `dictionary:setup` is run.
 
@@ -106,12 +108,31 @@ They verify:
 
 If your Drupal site doesn't already have PHPUnit configured, follow these steps:
 
-1. **Ensure PHPUnit is installed** (Drupal 10 includes it via `composer.json`):
+1. **Check your Drupal core version:**
 
 ```bash
 # From your Drupal root
-composer require --dev phpunit/phpunit
+composer show drupal/core-recommended | grep versions
 ```
+
+2. **Install Drupal's testing dependencies** (required for Drupal's test bootstrap):
+
+```bash
+# Remove standalone PHPUnit if installed (Drupal manages its own version)
+composer remove --dev phpunit/phpunit 2>/dev/null || true
+
+# Install core-dev matching your Drupal version
+# For Drupal 10.x:
+composer require --dev "drupal/core-dev:^10" --with-all-dependencies
+
+# For Drupal 11.x:
+composer require --dev "drupal/core-dev:^11" --with-all-dependencies
+```
+
+**Important notes:**
+- Do not install PHPUnit separately! `drupal/core-dev` includes the correct PHPUnit version for your Drupal version (9.x for Drupal 10, 10.x/11.x for Drupal 11).
+- The `--with-all-dependencies` flag allows Composer to downgrade packages if needed to match Drupal's requirements.
+- If you get version conflicts, ensure your site's Composer dependencies are properly managed. Drupal 10 requires Symfony 6, Drupal 11 requires Symfony 7.
 
 2. **Create `phpunit.xml` in your Drupal root** (if it doesn't exist):
 
