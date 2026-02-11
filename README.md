@@ -5,7 +5,7 @@ Drop-in Drupal module for importing dictionary definitions via Drush command. Im
 ## Requirements
 
 - Drupal 10.x or 11.x
-- PHP 8.1+ (8.2+ recommended for Drupal 11)
+- PHP 8.1+ (8.3+ recommended for Drupal 11)
 - Drush 12+
 - Node and JSON:API core modules (declared as dependencies)
 
@@ -132,6 +132,7 @@ composer require --dev "drupal/core-dev:^11" --with-all-dependencies
 ```
 
 **Important notes:**
+
 - Do not install PHPUnit separately! `drupal/core-dev` includes the correct PHPUnit version for your Drupal version (9.x for Drupal 10, 10.x/11.x for Drupal 11).
 - The `--with-all-dependencies` flag allows Composer to downgrade packages if needed to match Drupal's requirements.
 - If you get version conflicts, ensure your site's Composer dependencies are properly managed. Drupal 10 requires Symfony 6, Drupal 11 requires Symfony 7.
