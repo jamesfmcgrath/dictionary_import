@@ -90,6 +90,8 @@ curl "https://your-site.com/jsonapi/node/dictionary_entry?filter[field_word]=hel
 
 ## Testing
 
+### PHPUnit Kernel Tests
+
 Kernel PHPUnit tests for this module live under:
 
 - `tests/src/Kernel/DictionaryImporterTest.php`
@@ -100,10 +102,60 @@ They verify:
 - Updating an existing `Dictionary Entry` node when the word already exists.
 - Not creating any nodes when the external API reports that a word is not found.
 
-From the Drupal project root (where `phpunit.xml` is located), run:
+### Setup PHPUnit (if not already configured)
+
+If your Drupal site doesn't already have PHPUnit configured, follow these steps:
+
+1. **Ensure PHPUnit is installed** (Drupal 10 includes it via `composer.json`):
+
+```bash
+# From your Drupal root
+composer require --dev phpunit/phpunit
+```
+
+2. **Create `phpunit.xml` in your Drupal root** (if it doesn't exist):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="web/core/tests/bootstrap.php"
+         colors="true">
+  <php>
+    <ini name="error_reporting" value="32767"/>
+    <ini name="memory_limit" value="-1"/>
+    <!-- Replace with your local site URL -->
+    <env name="SIMPLETEST_BASE_URL" value="http://localhost"/>
+    <!-- Replace with your database connection string -->
+    <env name="SIMPLETEST_DB" value="mysql://user:pass@localhost/dbname"/>
+  </php>
+  <testsuites>
+    <testsuite name="kernel">
+      <directory>web/modules/custom/*/tests/src/Kernel</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>
+```
+
+3. **Update the environment variables** in `phpunit.xml`:
+   - `SIMPLETEST_BASE_URL`: Your local Drupal site URL
+   - `SIMPLETEST_DB`: Your database connection string (format: `mysql://user:pass@host/dbname`)
+
+### Running the Tests
+
+From your Drupal project root (where `phpunit.xml` is located):
 
 ```bash
 vendor/bin/phpunit web/modules/custom/dictionary_import/tests/src/Kernel/DictionaryImporterTest.php
 ```
 
-Manual verification: import a word, then confirm the node exists and is exposed via JSON:API.
+**Note:** If your module is installed in a different path (e.g., `modules/contrib/dictionary_import`), adjust the path accordingly.
+
+### Manual Verification
+
+Import a word via Drush, then confirm the node exists and is exposed via JSON:API:
+
+```bash
+drush dictionary:import hello
+curl "https://your-site.com/jsonapi/node/dictionary_entry?filter[field_word]=hello"
+```
