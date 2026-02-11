@@ -1,34 +1,53 @@
-# Dictionary Import
+# Dictionary Import Module
 
-Imports dictionary definitions from an external API (Free Dictionary API) and creates Dictionary Entry content in Drupal. Exposes entries via JSON:API for consumption by the frontend.
+Drop-in Drupal module for importing dictionary definitions via Drush command. Imports dictionary definitions from the Free Dictionary API and creates Dictionary Entry content in Drupal, exposing entries via JSON:API for consumption by a frontend.
 
-## Prerequisites
+## Requirements
 
 - Drupal 10.x
-- Node and JSON:API modules (declared as dependencies)
-- Composer (module must be required via path repository in root project)
+- PHP 8.1+
+- Drush 12+
+- Node and JSON:API core modules (declared as dependencies)
 
-The Dictionary Entry content type with `field_word` and `field_definitions` fields is created automatically when the module is installed (via `hook_install`) or when `dictionary:setup` is run.
+The `Dictionary Entry` content type with `field_word` and `field_definitions` fields is created automatically when the module is installed (via `hook_install`) or when `dictionary:setup` is run.
 
 ## Installation
 
-The module is installed via Composer path repository. Ensure the root project `composer.json` includes:
+### Drop-in install (recommended for reviewers)
+
+1. Clone into your Drupal custom modules directory:
+
+```bash
+cd web/modules/custom
+git clone [repo-url] dictionary_import
+```
+
+2. Enable the module:
+
+```bash
+drush en dictionary_import -y
+drush cr
+```
+
+### Composer path repository (optional)
+
+If you prefer to wire this module into a larger project via Composer, add a path repository to your root `composer.json` (paths may vary depending on your project layout):
 
 ```json
 "repositories": [
-  {"type": "path", "url": "web/modules/custom/dictionary_import", "options": {"symlink": true}}
+  { "type": "path", "url": "web/modules/custom/dictionary_import", "options": { "symlink": true } }
 ],
 "require": {
   "drupal/dictionary_import": "@dev"
 }
 ```
 
-Then:
+Then run:
 
 ```bash
-ddev composer update drupal/dictionary_import
-ddev drush en dictionary_import -y
-ddev drush cr
+composer update drupal/dictionary_import
+drush en dictionary_import -y
+drush cr
 ```
 
 ## Usage
@@ -38,35 +57,36 @@ ddev drush cr
 For existing installations where the content type was not created on module install:
 
 ```bash
-ddev drush dictionary:setup
-# or: ddev drush dict-setup
+drush dictionary:setup
+# or: drush dict-setup
 ```
 
-### Drush command
+### Import a word
 
 Import a word from the external dictionary API:
 
 ```bash
-ddev drush dictionary:import hello
+drush dictionary:import hello
 # or using the alias
-ddev drush dict-import hello
+drush dict-import hello
 ```
 
-On success, a Dictionary Entry node is created or updated with the word and definitions. On failure (word not found, API error), an error message is displayed.
+On success, a `Dictionary Entry` node is created or updated with the word and definitions. On failure (word not found, API error), an error message is displayed.
 
-### JSON:API
+## JSON:API Access
 
 Once imported, entries are available via JSON:API:
 
-```
-GET /jsonapi/node/dictionary_entry
-GET /jsonapi/node/dictionary_entry?filter[field_word]=hello
+```bash
+curl "https://your-site.com/jsonapi/node/dictionary_entry"
+curl "https://your-site.com/jsonapi/node/dictionary_entry?filter[field_word]=hello"
 ```
 
-## Services
+## Architecture
 
-- `dictionary_import.api_client` — Fetches definitions from the external API
-- `dictionary_import.importer` — Creates/updates Dictionary Entry nodes
+- **DictionaryApiClient** (`dictionary_import.api_client`): Fetches definitions from the Free Dictionary API.
+- **DictionaryImporter** (`dictionary_import.importer`): Creates/updates `Dictionary Entry` nodes.
+- **DictionaryCommands**: Drush integration for `dictionary:setup` and `dictionary:import` (and their aliases).
 
 ## Testing
 
@@ -83,7 +103,7 @@ They verify:
 From the Drupal project root (where `phpunit.xml` is located), run:
 
 ```bash
-ddev exec ./vendor/bin/phpunit web/modules/custom/dictionary_import/tests/src/Kernel/DictionaryImporterTest.php
+vendor/bin/phpunit web/modules/custom/dictionary_import/tests/src/Kernel/DictionaryImporterTest.php
 ```
 
 Manual verification: import a word, then confirm the node exists and is exposed via JSON:API.
