@@ -1,0 +1,17 @@
+services:
+  dictionary_import.api_client:
+    class: Drupal\dictionary_import\Service\DictionaryApiClient
+    arguments:
+      - '@http_client'
+      - '@logger.channel.dictionary_import'
+
+  dictionary_import.importer:
+    class: Drupal\dictionary_import\Service\DictionaryImporter
+    arguments:
+      - '@entity_type.manager'
+      - '@dictionary_import.api_client'
+      - '@logger.channel.dictionary_import'
+
+  logger.channel.dictionary_import:
+    parent: logger.channel_base
+    arguments: ['dictionary_import']

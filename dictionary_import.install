@@ -1,0 +1,159 @@
+<?php
+
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\node\Entity\NodeType;
+
+/**
+ * Implements hook_install().
+ */
+function dictionary_import_install(): void {
+  \Drupal::logger('dictionary_import')->notice('hook_install() called');
+  try {
+    _dictionary_import_create_content_type_and_fields();
+    \Drupal::logger('dictionary_import')->notice('Content type and fields created successfully');
+  }
+  catch (\Exception $e) {
+    \Drupal::logger('dictionary_import')->error('Error in hook_install(): @message', ['@message' => $e->getMessage()]);
+    throw $e;
+  }
+}
+
+/**
+ * Creates the Dictionary Entry content type, fields, and displays.
+ */
+function _dictionary_import_create_content_type_and_fields(): void {
+  // Create the Dictionary Entry content type.
+  if (!NodeType::load('dictionary_entry')) {
+    $type = NodeType::create([
+      'type' => 'dictionary_entry',
+      'name' => 'Dictionary Entry',
+      'description' => 'Word definitions imported from external dictionary API',
+    ]);
+    $type->save();
+    // Clear entity type cache to ensure bundle is registered.
+    \Drupal::entityTypeManager()->clearCachedDefinitions();
+  }
+
+  // Create field_word storage (plain text, required on the bundle).
+  if (!FieldStorageConfig::loadByName('node', 'field_word')) {
+    $storage = FieldStorageConfig::create([
+      'field_name' => 'field_word',
+      'entity_type' => 'node',
+      'type' => 'string',
+      'settings' => [
+        'max_length' => 255,
+      ],
+      'cardinality' => 1,
+    ]);
+    $storage->save();
+  }
+
+  if (!FieldConfig::loadByName('node', 'dictionary_entry', 'field_word')) {
+    $field = FieldConfig::create([
+      'field_name' => 'field_word',
+      'entity_type' => 'node',
+      'bundle' => 'dictionary_entry',
+      'label' => 'Word',
+      'required' => TRUE,
+    ]);
+    $field->save();
+  }
+
+  // Create field_definitions storage (long text field).
+  if (!FieldStorageConfig::loadByName('node', 'field_definitions')) {
+    $storage = FieldStorageConfig::create([
+      'field_name' => 'field_definitions',
+      'entity_type' => 'node',
+      'type' => 'text_long',
+      'cardinality' => 1,
+    ]);
+    $storage->save();
+  }
+
+  if (!FieldConfig::loadByName('node', 'dictionary_entry', 'field_definitions')) {
+    $field = FieldConfig::create([
+      'field_name' => 'field_definitions',
+      'entity_type' => 'node',
+      'bundle' => 'dictionary_entry',
+      'label' => 'Definitions',
+    ]);
+    $field->save();
+  }
+
+  // Ensure form display exists and includes the custom fields.
+  /** @var \Drupal\Core\Entity\Display\EntityFormDisplay|null $form_display */
+  $form_display = EntityFormDisplay::load('node.dictionary_entry.default');
+  if (!$form_display) {
+    $form_display = EntityFormDisplay::create([
+      'targetEntityType' => 'node',
+      'bundle' => 'dictionary_entry',
+      'mode' => 'default',
+      'status' => TRUE,
+      'id' => 'node.dictionary_entry.default',
+    ]);
+  }
+  $form_display->setComponent('field_word', [
+    'type' => 'string_textfield',
+    'weight' => 0,
+    'settings' => [],
+  ]);
+  $form_display->setComponent('field_definitions', [
+    'type' => 'text_textarea',
+    'weight' => 1,
+    'settings' => [
+      'rows' => 5,
+    ],
+  ]);
+  $form_display->save();
+
+  // Ensure view display exists and includes the custom fields.
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplay|null $view_display */
+  $view_display = EntityViewDisplay::load('node.dictionary_entry.default');
+  if (!$view_display) {
+    $view_display = EntityViewDisplay::create([
+      'targetEntityType' => 'node',
+      'bundle' => 'dictionary_entry',
+      'mode' => 'default',
+      'status' => TRUE,
+      'id' => 'node.dictionary_entry.default',
+    ]);
+  }
+  $view_display->setComponent('field_word', [
+    'type' => 'string',
+    'label' => 'above',
+    'weight' => 0,
+    'settings' => [],
+  ]);
+  $view_display->setComponent('field_definitions', [
+    'type' => 'text_default',
+    'label' => 'above',
+    'weight' => 1,
+    'settings' => [],
+  ]);
+  $view_display->save();
+}
+
+/**
+ * Implements hook_update_N().
+ *
+ * Create content type and fields for existing installations.
+ */
+function dictionary_import_update_8001(): void {
+  _dictionary_import_create_content_type_and_fields();
+}
+
+/**
+ * Update field_definitions cardinality to single-value.
+ */
+function dictionary_import_update_8002(): void {
+  $field_storage = FieldStorageConfig::loadByName('node', 'field_definitions');
+  if ($field_storage && $field_storage->getCardinality() !== 1) {
+    $field_storage->setCardinality(1);
+    $field_storage->save();
+  }
+}
+
+

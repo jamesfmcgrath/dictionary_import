@@ -1,0 +1,13 @@
+{
+  "name": "drupal/dictionary_import",
+  "type": "drupal-custom-module",
+  "description": "Dictionary import module",
+  "require": {
+    "drupal/core": "^10"
+  },
+  "autoload": {
+    "psr-4": {
+      "Drupal\\dictionary_import\\": "src/"
+    }
+  }
+}

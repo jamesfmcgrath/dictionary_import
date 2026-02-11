@@ -1,0 +1,8 @@
+name: Dictionary Import
+type: module
+description: 'Imports dictionary definitions from external API and creates Dictionary Entry nodes'
+core_version_requirement: ^10
+package: Custom
+dependencies:
+  - drupal:node
+  - drupal:jsonapi
