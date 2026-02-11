@@ -81,8 +81,10 @@ Once imported, entries are available via JSON:API:
 
 ```bash
 curl "https://your-site.com/jsonapi/node/dictionary_entry"
-curl "https://your-site.com/jsonapi/node/dictionary_entry?filter[field_word]=hello"
+curl 'https://your-site.com/jsonapi/node/dictionary_entry?filter%5Bfield_word%5D=hello'
 ```
+
+> **Note:** Some shells treat square brackets (`[]`) as glob patterns. Either URL‑encode them (as above) or escape them to avoid `curl: (3) bad range in URL` errors.
 
 ## Architecture
 
@@ -178,5 +180,5 @@ Import a word via Drush, then confirm the node exists and is exposed via JSON:AP
 
 ```bash
 drush dictionary:import hello
-curl "https://your-site.com/jsonapi/node/dictionary_entry?filter[field_word]=hello"
+curl 'https://your-site.com/jsonapi/node/dictionary_entry?filter%5Bfield_word%5D=hello'
 ```
